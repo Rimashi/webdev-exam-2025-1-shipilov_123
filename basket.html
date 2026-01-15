@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина - Интернет-магазин</title>
+    <link rel="stylesheet" href="./styles/main.css">
+    <link rel="stylesheet" href="./styles/basket.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <header class="header">
+            <div class="header__container _container">
+                <div class="header__top">
+                    <div class="header__logo">
+                        <h1><a href="index.html">Интернет-магазин</a></h1>
+                    </div>
+
+                    <div class="header__icons">
+                        <a href="index.html" class="icon-link">Каталог</a>
+                        <a href="orders.html" class="icon-link">Заказы</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="main__container _container">
+                <h1 class="title" style="margin-bottom: 30px;">Корзина</h1>
+
+                <div class="basket-content">
+                    <section class="basket-section">
+                        <h2 class="section-title">Состав заказа</h2>
+
+                        <div id="basketItems" class="basket-items">
+                        </div>
+
+                        <div id="emptyBasket" class="empty-state" style="display: none;">
+                            <p>Корзина пуста. Перейдите в каталог, чтобы добавить товары.</p>
+                            <a href="index.html" class="btn btn-primary">Перейти в каталог</a>
+                        </div>
+                    </section>
+
+                    <section class="order-form-section">
+                        <h2 class="section-title">Оформление заказа</h2>
+
+                        <form id="orderForm" class="order-form">
+                            <div class="form-section">
+                                <h3 class="form-section-title">Личные данные</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="fullName" class="form-label">Имя и фамилия *</label>
+                                        <input type="text" id="fullName" name="full_name" class="form-input" required
+                                            placeholder="Иванов Иван Иванович">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email" class="form-label">Email *</label>
+                                        <input type="email" id="email" name="email" class="form-input" required
+                                            placeholder="example@example.com">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label">Телефон *</label>
+                                        <input type="tel" id="phone" name="phone" class="form-input"
+                                            pattern="^(\+7|8)[\s(]?\d{3}[\s)]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$"
+                                            placeholder="+7 (999) 123-45-67" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="subscribe" name="subscribe">
+                                        <span>Согласен получать рекламные рассылки</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h3 class="form-section-title">Доставка</h3>
+
+                                <div class="form-group">
+                                    <label for="deliveryAddress" class="form-label">Адрес доставки *</label>
+                                    <input type="text" id="deliveryAddress" name="delivery_address" class="form-input"
+                                        required placeholder="ул. Примерная, д. 10, кв. 25">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="deliveryDate" class="form-label">Дата доставки *</label>
+                                        <input type="date" id="deliveryDate" name="delivery_date" class="form-input"
+                                            required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="deliveryInterval" class="form-label">Временной интервал *</label>
+                                        <select id="deliveryInterval" name="delivery_interval" class="form-select"
+                                            required>
+                                            <option value="">Выберите интервал</option>
+                                            <option value="08:00-12:00">08:00-12:00</option>
+                                            <option value="12:00-14:00">12:00-14:00</option>
+                                            <option value="14:00-18:00">14:00-18:00</option>
+                                            <option value="18:00-22:00">18:00-22:00</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h3 class="form-section-title">Комментарий к заказу</h3>
+                                <div class="form-group">
+                                    <textarea id="comment" name="comment" class="form-textarea"
+                                        placeholder="Ваши пожелания к заказу..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="order-summary">
+                                <h3 class="summary-title">Итоговая стоимость</h3>
+
+                                <div class="summary-row">
+                                    <span>Стоимость товаров:</span>
+                                    <span id="goodsTotal">0 ₽</span>
+                                </div>
+
+                                <div class="summary-row">
+                                    <span>Стоимость доставки:</span>
+                                    <span id="deliveryCost">0 ₽</span>
+                                </div>
+
+                                <div class="summary-row summary-total">
+                                    <span>Итого:</span>
+                                    <span id="orderTotal">0 ₽</span>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-large">
+                                    Оформить заказ
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer__container _container">
+                <div class="footer__content">
+                    <div class="footer__info">
+                        <h3 class="footer__title">Интернет-магазин</h3>
+                        <p class="footer__text">© 2025 Интернет-магазин. Все права защищены.</p>
+                        <p class="footer__text">Лучшие товары по доступным ценам</p>
+                    </div>
+                    <div class="footer__contacts">
+                        <p class="footer__contact">Телефон: +7 (000) 000-00-00</p>
+                        <p class="footer__contact">Email: info@internet-magazin.ru</p>
+                        <p class="footer__contact">Адрес: г. Москва, ул. Торговая, д. 123</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="./scripts/config.js"></script>
+    <script src="./scripts/api.js"></script>
+    <script src="./scripts/main.js"></script>
+    <script src="./scripts/notifications.js"></script>
+    <script src="./scripts/basket.js"></script>
+</body>
+
+</html>
