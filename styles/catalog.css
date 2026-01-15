@@ -630,3 +630,44 @@
     padding-top: 30px;
     border-top: 1px solid var(--border-medium);
 }
+
+
+@media (max-width: 992px) {
+    .main__content {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .sidebar {
+        width: 100%;
+        position: static;
+        flex: none;
+    }
+
+    .catalog__grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .catalog__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 24px;
+    }
+
+    .container__header {
+        padding: 15px;
+    }
+
+    .product-card {
+        padding: 15px;
+    }
+
+    .product-card__image {
+        height: 180px;
+    }
+}

@@ -357,9 +357,12 @@ class OrdersManager {
 
             document.getElementById('editDeliveryAddress').value = order.delivery_address;
 
-            const [day, month, year] = order.delivery_date.split('.');
-            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            document.getElementById('editDeliveryDate').value = formattedDate;
+            let dateValue = order.delivery_date;
+            if (dateValue.includes('.')) {
+                const [day, month, year] = dateValue.split('.');
+                dateValue = `${year}-${month}-${day}`;
+            }
+            document.getElementById('editDeliveryDate').value = dateValue;
 
             document.getElementById('editDeliveryInterval').value = order.delivery_interval;
             document.getElementById('editComment').value = order.comment || '';
@@ -457,13 +460,12 @@ class OrdersManager {
             }
         });
 
-        const editForm = document.getElementById('editOrderForm');
-        if (editForm) {
-            editForm.addEventListener('submit', async (e) => {
+        document.addEventListener('submit', async (e) => {
+            if (e.target && e.target.id === 'editOrderForm') {
                 e.preventDefault();
                 await this.updateOrder();
-            });
-        }
+            }
+        });
     }
 
     applyPhoneMask(inputElement) {

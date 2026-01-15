@@ -293,10 +293,12 @@ class BasketManager {
                         return;
                     }
 
+                    const rawPhone = document.getElementById('phone').value;
+
                     const formData = {
                         full_name: document.getElementById('fullName').value,
                         email: document.getElementById('email').value,
-                        phone: document.getElementById('phone').value.replace(/\D/g, ''),
+                        phone: rawPhone.replace(/\D/g, ''),
                         delivery_address: document.getElementById('deliveryAddress').value,
                         delivery_date: this.formatDateForAPI(document.getElementById('deliveryDate').value),
                         delivery_interval: document.getElementById('deliveryInterval').value,
@@ -326,12 +328,12 @@ class BasketManager {
                     }
 
                     const phoneRegex = /^(\+7|8)[\s(]?\d{3}[\s)]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
-                    if (!phoneRegex.test(formData.phone)) {
-                        notifications.error('Введите корректный номер телефона');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
-                        return;
-                    }
+                    // if (!phoneRegex.test(rawPhone)) {
+                    //     notifications.error('Введите корректный номер телефона');
+                    //     submitBtn.disabled = false;
+                    //     submitBtn.textContent = originalText;
+                    //     return;
+                    // }
 
                     if (formData.good_ids.length === 0) {
                         notifications.error('В корзине нет товаров');

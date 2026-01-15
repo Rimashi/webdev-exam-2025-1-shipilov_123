@@ -183,6 +183,20 @@
     color: white !important;
 }
 
+.old-price {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.current-price {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent-neon);
+    text-shadow: 0 0 8px rgba(0, 204, 68, 0.3);
+}
+
 /* Стили формы */
 .form-section {
     margin-bottom: 20px;

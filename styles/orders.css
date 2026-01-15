@@ -558,3 +558,77 @@
         width: 100%;
     }
 }
+
+@media (max-width: 768px) {
+
+    .orders-table thead {
+        display: none;
+    }
+
+    .orders-table tbody tr {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-secondary);
+        margin-bottom: 20px;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid var(--border-medium);
+    }
+
+    .orders-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+        font-size: 14px;
+    }
+
+    .orders-table tbody td:last-child {
+        border-bottom: none;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 15px;
+    }
+
+    .orders-table tbody td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: var(--text-secondary);
+        text-align: left;
+        margin-right: 15px;
+    }
+
+    .orders-table tbody td:nth-of-type(1)::before {
+        content: "№ Заказа";
+    }
+
+    .orders-table tbody td:nth-of-type(2)::before {
+        content: "Дата";
+    }
+
+    .orders-table tbody td:nth-of-type(3)::before {
+        content: "Состав";
+    }
+
+    .orders-table tbody td:nth-of-type(4)::before {
+        content: "Стоимость";
+    }
+
+    .orders-table tbody td:nth-of-type(5)::before {
+        content: "Доставка";
+    }
+
+    .orders-table tbody td:nth-of-type(6)::before {
+        content: "";
+        display: none;
+    }
+
+    .orders-table .btn-icon {
+        padding: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
