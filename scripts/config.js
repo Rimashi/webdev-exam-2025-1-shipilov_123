@@ -1,5 +1,6 @@
 const API_KEY = "42fea230-497a-44ef-9980-21238395e175";
 const API_BASE_URL = 'https://edu.std-900.ist.mospolytech.ru/exam-2024-1/api';
+// const API_BASE_URL = 'http://localhost:8000/api';
 
 let currentOrderId = null;
 

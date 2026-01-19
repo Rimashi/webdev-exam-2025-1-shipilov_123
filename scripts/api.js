@@ -4,7 +4,6 @@ class ExamAPI {
         this.key = API_KEY;
     }
 
-    // Получить список товаров
     async getGoods(page = 1, per_page = 10, query = '', sort_order = '') {
         try {
             const url = new URL(`${this.baseUrl}/goods`);
@@ -44,7 +43,6 @@ class ExamAPI {
                     total_count: data._pagination.total_count
                 };
             } else if (Array.isArray(data)) {
-                // Простой массив
                 goodsArray = data;
                 paginationInfo.total = data.length;
             } else {
@@ -65,7 +63,6 @@ class ExamAPI {
         }
     }
 
-    // Получить товар по ID
     async getGood(id) {
         if (!id || id === 'undefined') {
             console.error('Invalid product ID:', id);
@@ -91,7 +88,6 @@ class ExamAPI {
         }
     }
 
-    // Автодополнение
     async getAutocomplete(query) {
         try {
             const response = await fetch(
@@ -108,7 +104,6 @@ class ExamAPI {
         }
     }
 
-    // Получить заказы
     async getOrders() {
         try {
             const response = await fetch(
@@ -125,7 +120,6 @@ class ExamAPI {
         }
     }
 
-    // Получить заказ по ID
     async getOrder(id) {
         try {
             const response = await fetch(
@@ -142,7 +136,6 @@ class ExamAPI {
         }
     }
 
-    // Создать заказ
     async createOrder(orderData) {
         try {
             console.log('Создание заказа:', orderData);
@@ -186,7 +179,6 @@ class ExamAPI {
         }
     }
 
-    // Обновить заказ
     async updateOrder(id, orderData) {
         try {
             console.log('Обновление заказа:', id, orderData);
@@ -215,7 +207,6 @@ class ExamAPI {
         }
     }
 
-    // Удалить заказ
     async deleteOrder(id) {
         try {
             const response = await fetch(

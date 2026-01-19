@@ -119,7 +119,6 @@ class CatalogManager {
             console.log('После поиска:', filtered.length);
         }
 
-        // Сортировка
         filtered = this.applySorting(filtered);
 
         this.filteredGoods = filtered;
@@ -199,7 +198,7 @@ class CatalogManager {
             return;
         }
 
-        const pageGoods = this.getCurrentPageGoods();
+        const pageGoods = this.getCurrentPageGoods(1);
         this.currentGoods = pageGoods;
 
         this.renderGoods(pageGoods);
@@ -209,8 +208,10 @@ class CatalogManager {
 
         this.isLoading = false;
     }
-    getCurrentPageGoods() {
-        const startIndex = (this.currentPage - 1) * this.perPage;
+
+    getCurrentPageGoods(page = null) {
+        const targetPage = page !== null ? page : this.currentPage;
+        const startIndex = (targetPage - 1) * this.perPage;
         const endIndex = Math.min(startIndex + this.perPage, this.filteredGoods.length);
         return this.filteredGoods.slice(startIndex, endIndex);
     }
@@ -226,16 +227,18 @@ class CatalogManager {
 
         this.isLoading = true;
 
+        this.renderLoadMoreButton();
+
         const nextPage = this.currentPage + 1;
 
         if (nextPage > this.totalPages) {
             console.log('Нет больше страниц для загрузки');
             this.isLoading = false;
-            this.renderLoadMoreButton(); 
+            this.renderLoadMoreButton();
             return;
         }
 
-        const nextPageGoods = this.getCurrentPageGoods();
+        const nextPageGoods = this.getCurrentPageGoods(nextPage);
         console.log('Загружаем товары для страницы', nextPage, ':', nextPageGoods.length, 'товаров');
 
         this.currentGoods = [...this.currentGoods, ...nextPageGoods];
@@ -293,6 +296,9 @@ class CatalogManager {
         const discountPercent = hasDiscount ?
             Math.round((1 - good.discount_price / good.actual_price) * 100) : 0;
 
+        let new_img = "http://localhost:8000/api" + good.image_url.replace('https://edu.std-900.ist.mospolytech.ru/exam-2024-1/api', '');
+        // console.log("new img url: ", new_img);
+
         return `
             <div class="good-card" data-id="${good.id}">
                 <div class="good-card__image">
@@ -338,7 +344,7 @@ class CatalogManager {
 
         let html = '<div class="pagination">';
 
-       
+
         if (this.currentPage > 1) {
             html += `
                 <button class="pagination-btn pagination-prev" onclick="catalogManager.goToPage(${this.currentPage - 1})">
@@ -440,7 +446,7 @@ class CatalogManager {
 
         this.currentPage = page;
 
-        const pageGoods = this.getCurrentPageGoods();
+        const pageGoods = this.getCurrentPageGoods(page);
         this.currentGoods = pageGoods;
 
         this.renderGoods(pageGoods);
@@ -531,13 +537,6 @@ class CatalogManager {
             if (e.target.name === 'category') {
                 this.updateFilters();
                 this.applyFiltersAndRender();
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-         if (e.target && e.target.id === 'loadMoreBtn') {
-                e.preventDefault();
-                this.loadMore();
             }
         });
     }

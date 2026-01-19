@@ -1,4 +1,3 @@
-/* Обнуление и базовые стили */
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +13,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Цветовая схема для темной темы */
 :root {
     --bg-primary: #1a1a1a;
     --bg-secondary: #2d2d2d;
@@ -39,7 +37,6 @@ body {
     --border-radius-sm: 4px;
 }
 
-/* Общие классы */
 ._container {
     max-width: 1200px;
     margin: 0 auto;
@@ -103,7 +100,6 @@ body {
     font-size: 14px;
 }
 
-/* Header */
 .header {
     min-height: 100px;
     width: 100%;
@@ -448,7 +444,7 @@ body {
 .footer__container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 20px;
 }
 
 .footer__content {
@@ -564,6 +560,10 @@ body {
     justify-content: center;
     padding: 20px;
     animation: fadeIn 0.3s ease;
+}
+
+body.modal-open {
+    overflow: hidden;
 }
 
 @keyframes fadeIn {

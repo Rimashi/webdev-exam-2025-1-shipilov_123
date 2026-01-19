@@ -88,6 +88,8 @@ class BasketManager {
 
         const price = item.discount_price || item.actual_price || 0;
         const hasDiscount = item.discount_price && item.discount_price < item.actual_price;
+        let new_img = "http://localhost:8000/api" + item.image_url.replace('https://edu.std-900.ist.mospolytech.ru/exam-2024-1/api', '');
+
 
         return `
             <div class="basket-item" data-id="${item.id}">
