@@ -415,7 +415,7 @@ class CatalogManager {
         container.innerHTML = `
         <button id="loadMoreBtn" class="load-more-btn" 
                 ${!this.isLoading ? 'disabled' : ''}>
-            ${!this.isLoading ? 'Загрузка...' : `Загрузить еще ${nextPageCount} товаров (осталось ${remaining})`}
+            ${!this.isLoading ? 'Загрузка...' : `Загрузить еще ${nextPageCount} товаров`}
         </button>
     `;
 

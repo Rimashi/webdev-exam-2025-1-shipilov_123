@@ -1,14 +1,4 @@
 /* Заголовок страницы */
-.orders-header {
-    margin: 30px 0;
-}
-
-.orders-header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
 .orders__header {
     display: flex;
     justify-content: space-between;
@@ -16,13 +6,6 @@
     margin-bottom: 30px;
     flex-wrap: wrap;
     gap: 20px;
-}
-
-.orders__header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
 }
 
 .orders__stats {
@@ -54,6 +37,7 @@
     font-weight: 500;
 }
 
+/* Вкладки */
 .orders__tabs {
     display: flex;
     background: var(--bg-surface);
@@ -93,337 +77,15 @@
     display: block;
 }
 
-.orders-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-surface);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-medium);
-}
-
-.orders-table th,
-.orders-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-medium);
-}
-
-.orders-table th {
-    background-color: rgba(0, 204, 68, 0.1);
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.orders-table tbody tr:hover {
-    background-color: var(--bg-tertiary);
-}
-
-.orders-table .actions {
-    white-space: nowrap;
-}
-
-.orders-table .actions .btn {
-    margin-right: 5px;
-    margin-bottom: 5px;
-}
-
-.orders-table .actions .btn:last-child {
-    margin-right: 0;
-}
-
-.btn-sm {
-    padding: 8px 16px;
-    font-size: 14px;
-}
-
-.btn-info {
-    background: #17a2b8;
-    color: white;
-    border: none;
-}
-
-.btn-warning {
-    background: #ffc107;
-    color: #000;
-    border: none;
-}
-
-.btn-danger {
-    background: #dc3545;
-    color: white;
-    border: none;
-}
-
-.btn-info:hover {
-    background: #138496;
-}
-
-.btn-warning:hover {
-    background: #e0a800;
-}
-
-.btn-danger:hover {
-    background: #c82333;
-}
-
-/* Модальные окна как в первом проекте */
-.modal__background {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.modal__background.active {
-    display: flex;
-}
-
-.modal__active {
-    position: relative;
-    width: 90%;
-    max-width: 600px;
-    background: var(--bg-surface);
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border-medium);
-}
-
-.modal__close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--text-primary);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: color 0.3s ease;
-    background: none;
-    border: none;
-}
-
-.modal__close:hover {
-    color: var(--accent-neon);
-}
-
-.modal__window h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: var(--accent-neon);
-}
-
-/* Стили для деталей заказа как в первом проекте */
-.order__details-content {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
-.order__info-section,
-.customer__info-section,
-.order__items-section,
-.order__notes-section {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-medium);
-}
-
-.order__info-section h3,
-.customer__info-section h3,
-.order__items-section h3,
-.order__notes-section h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: var(--text-primary);
-}
-
-.info__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 12px;
-}
-
-.info__item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-}
-
-.info__label {
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.info__value {
-    color: var(--text-primary);
-    text-align: right;
-}
-
-.order__items-list {
-    margin-bottom: 16px;
-}
-
-.order__item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-medium);
-}
-
-.order__item:last-child {
-    border-bottom: none;
-}
-
-.item__info {
-    flex: 1;
-}
-
-.item__name {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-}
-
-.item__meta {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-.item__total {
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 80px;
-    text-align: right;
-}
-
-.order__total-section {
-    padding-top: 16px;
-    border-top: 2px solid var(--border-medium);
-}
-
-.total__line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.total__amount {
-    color: var(--accent-neon);
-    font-size: 24px;
-}
-
-.order__notes {
-    background: var(--bg-surface);
-    padding: 12px;
-    border-radius: 6px;
-    font-style: italic;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    border: 1px solid var(--border-medium);
-}
-
-/* Форма редактирования */
-.checkout-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.form-actions {
-    display: flex;
-    gap: 16px;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-medium);
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .orders__header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .orders__stats {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .stat__card {
-        flex: 1;
-        min-width: auto;
-    }
-
-    .info__grid {
-        grid-template-columns: 1fr;
-    }
-
-    .modal__active {
-        width: 95%;
-        margin: 20px;
-        padding: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .orders__tabs {
-        flex-direction: column;
-    }
-
-    .orders-table {
-        display: block;
-        overflow-x: auto;
-    }
-
-    .orders-table .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .orders-table .actions .btn {
-        margin-right: 0;
-        width: 100%;
-    }
-}
-
-/* Контейнер заказов */
-.orders-container {
-    background-color: var(--bg-surface);
-    border-radius: var(--border-radius);
-    padding: 30px;
-    box-shadow: var(--shadow);
-    margin-bottom: 40px;
-    overflow-x: auto;
-    border: 1px solid var(--border-medium);
-}
-
 /* Таблица заказов */
 .orders-table {
     width: 100%;
     border-collapse: collapse;
+    background: var(--bg-surface);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-medium);
 }
 
 .orders-table th,
@@ -542,6 +204,22 @@
 }
 
 @media (max-width: 768px) {
+    .orders__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+    }
+
+    .orders__stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .stat__card {
+        flex: 1;
+        min-width: auto;
+    }
+
     .orders-table {
         display: block;
         overflow-x: auto;
@@ -557,9 +235,6 @@
         margin-right: 0;
         width: 100%;
     }
-}
-
-@media (max-width: 768px) {
 
     .orders-table thead {
         display: none;
@@ -625,10 +300,15 @@
         display: none;
     }
 
-    .orders-table .btn-icon {
-        padding: 10px;
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
+    .modal__active {
+        width: 95%;
+        margin: 20px;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .orders__tabs {
+        flex-direction: column;
     }
 }

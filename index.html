@@ -25,17 +25,20 @@
                     <button class="btn-search" type="button" title="Поиск">🔍</button>
                 </div>
 
-                <div class="header__icons">
-                    <a href="basket.html" class="icon-link basket-link">
-                        <span class="badge" id="cartBadge">0</span>
-                        Корзина
-                    </a>
-                    <a href="orders.html" class="icon-link">
-                        Заказы
-                    </a>
-                </div>
+                <button class="menu__icon" type="button" aria-label="Открыть меню">
+                    <span></span>
+                </button>
+
+                <nav class="header__menu">
+                    <ul class="menu__list">
+                        <li><a href="index.html" class="menu__link">Каталог</a></li>
+                        <li><a href="orders.html" class="menu__link">Мои заказы</a></li>
+                        <li><a href="basket.html" class="menu__link">Корзина</a></li>
+                    </ul>
+                </nav>
             </div>
         </header>
+        <div class="menu-overlay" id="menu_overlay"></div>
 
         <main class="main">
             <div class="main__container _container">
@@ -82,7 +85,7 @@
                             <div class="catalog__controls">
                                 <div class="sort-container">
                                     <select id="sortSelect" class="sort-select">
-                                        <option value="">Сортировка</option>
+                                        <option value="">Все товары</option>
                                         <option value="name_asc">По названию (А-Я)</option>
                                         <option value="name_desc">По названию (Я-А)</option>
                                         <option value="price_asc">По цене (возрастание)</option>
@@ -104,8 +107,7 @@
                         </div>
 
                         <div class="catalog__footer" id="catalogFooter">
-                            <div class="load-more-container" id="loadMoreContainer"
-                                style="text-align: center; margin-bottom: 20px;">
+                            <div class="load-more-container" id="loadMoreContainer">
                             </div>
 
                             <div class="pagination-container" id="paginationContainer">

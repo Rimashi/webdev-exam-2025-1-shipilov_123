@@ -13,23 +13,32 @@
     <div class="wrapper">
         <header class="header">
             <div class="header__container _container">
-                <div class="header__top">
-                    <div class="header__logo">
-                        <h1><a href="index.html">Интернет-магазин</a></h1>
-                    </div>
-
-                    <div class="header__icons">
-                        <a href="index.html" class="icon-link">Каталог</a>
-                        <a href="basket.html" class="icon-link">Корзина</a>
-                    </div>
+                <div class="header__logo">
+                    <h1><a href="./index.html">Интернет-магазин</a></h1>
                 </div>
+
+                <button class="menu__icon" type="button" aria-label="Открыть меню">
+                    <span></span>
+                </button>
+
+                <nav class="header__menu">
+                    <ul class="menu__list">
+                        <li><a href="index.html" class="menu__link">Каталог</a></li>
+                        <li><a href="orders.html" class="menu__link">Мои заказы</a></li>
+                        <li><a href="basket.html" class="menu__link">Корзина</a></li>
+                    </ul>
+                </nav>
             </div>
         </header>
+        <div class="menu-overlay" id="menu_overlay"></div>
 
         <main class="main">
             <div class="main__container _container">
                 <div class="orders__header">
-                    <h1>Мои заказы</h1>
+                    <div class="container__header">
+                        <h1 class="title">Мои заказы</h1>
+                    </div>
+
                     <div class="orders__stats">
                         <div class="stat__card">
                             <span class="stat__number" id="totalOrdersCount">0</span>
@@ -91,10 +100,13 @@
                     <div class="footer__info">
                         <h3 class="footer__title">Интернет-магазин</h3>
                         <p class="footer__text">© 2025 Интернет-магазин. Все права защищены.</p>
+                        <p class="footer__text">Лучшие товары по доступным ценам</p>
                     </div>
                     <div class="footer__contacts">
                         <p class="footer__contact">Телефон: +7 (000) 000-00-00</p>
                         <p class="footer__contact">Email: info@internet-magazin.ru</p>
+                        <p class="footer__contact">Адрес: г. Москва, ул. Торговая, д. 123</p>
+                        <p class="footer__contact">Режим работы: Пн-Пт 9:00-21:00, Сб-Вс 10:00-20:00</p>
                     </div>
                 </div>
             </div>
