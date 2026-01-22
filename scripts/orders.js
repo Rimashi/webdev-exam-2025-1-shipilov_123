@@ -114,7 +114,7 @@ const modals = {
                     </div>
                     <div class="modal__actions">
                         <button type="button" class="btn btn-secondary" data-modal-close>Отмена</button>
-                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <button type="submit" class="btn btn-primary btn-accent">Сохранить</button>
                     </div>
                 </form>
             </div>
@@ -123,14 +123,10 @@ const modals = {
     `
 };
 
-if (typeof ModalCore !== 'undefined') {
-    ModalCore.register('order_info', modals.order_info);
-    ModalCore.register('edit_order', modals.edit_order);
-}
-
 class OrdersManager {
     constructor() {
         this.orders = [];
+        this.completedOrders = [];
         this.currentOrderId = null;
         this.goodsCache = new Map();
         this.init();
@@ -138,19 +134,42 @@ class OrdersManager {
 
     async init() {
         await this.loadOrders();
-        this.renderOrders();
+        this.setupActiveTabHighlight();
         this.bindEvents();
+        this.renderOrders();
         this.updateStats();
+    }
+
+    setupActiveTabHighlight() {
+        const currentPage = window.location.pathname.split('/').pop();
+        const menuLinks = document.querySelectorAll('.menu__link');
+
+        menuLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage ||
+                (currentPage === '' && href === 'index.html') ||
+                (currentPage === 'index.html' && href === 'index.html')) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
     }
 
     async loadOrders() {
         try {
             this.orders = await examAPI.getOrders();
+
+            const savedCompleted = localStorage.getItem('completedOrders');
+            this.completedOrders = savedCompleted ? JSON.parse(savedCompleted) : [];
+
             console.log('Заказы загружены:', this.orders);
+            console.log('Завершенные заказы:', this.completedOrders);
         } catch (error) {
             console.error('Ошибка загрузки заказов:', error);
             notifications.error('Не удалось загрузить заказы');
             this.orders = [];
+            this.completedOrders = [];
         }
     }
 
@@ -182,18 +201,53 @@ class OrdersManager {
     updateStats() {
         const activeOrdersCount = document.getElementById('activeOrdersCount');
         const totalOrdersCount = document.getElementById('totalOrdersCount');
+        const completedOrdersCount = document.getElementById('completedOrdersCount');
 
         if (activeOrdersCount) {
             activeOrdersCount.textContent = this.orders.length;
         }
         if (totalOrdersCount) {
-            totalOrdersCount.textContent = this.orders.length;
+            totalOrdersCount.textContent = this.orders.length + this.completedOrders.length;
+        }
+        if (completedOrdersCount) {
+            completedOrdersCount.textContent = this.completedOrders.length;
         }
     }
 
     formatDate(dateString) {
         try {
+            if (!dateString) return 'Не указана';
+
+            if (dateString.includes('.')) {
+                const [day, month, year] = dateString.split('.');
+                const date = new Date(year, month - 1, day);
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } else {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString;
+                }
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+        } catch {
+            return dateString || 'Неизвестно';
+        }
+    }
+
+    formatDateTime(dateString) {
+        try {
             const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return this.formatDate(dateString);
+            }
             return date.toLocaleDateString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
@@ -202,12 +256,39 @@ class OrdersManager {
                 minute: '2-digit'
             });
         } catch {
-            return dateString || 'Неизвестно';
+            return this.formatDate(dateString);
         }
     }
 
-    async calculateOrderTotal(order) {
-        const goods = await this.loadGoodsForOrder(order.good_ids);
+    canEditOrder(order) {
+        try {
+            if (!order.delivery_date) return true;
+
+            const deliveryDate = this.parseDeliveryDate(order.delivery_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            return deliveryDate >= today;
+        } catch (error) {
+            console.error('Ошибка проверки возможности редактирования:', error);
+            return false;
+        }
+    }
+
+    parseDeliveryDate(dateString) {
+        try {
+            if (dateString.includes('.')) {
+                const [day, month, year] = dateString.split('.').map(Number);
+                return new Date(year, month - 1, day);
+            } else {
+                return new Date(dateString);
+            }
+        } catch {
+            return new Date();
+        }
+    }
+
+    async calculateOrderTotal(goods) {
         return goods.reduce((total, good) => {
             const price = good.discount_price || good.actual_price || 0;
             return total + price;
@@ -215,108 +296,244 @@ class OrdersManager {
     }
 
     async renderOrders() {
-        const tbody = document.getElementById('ordersTableBody');
-        const emptyOrders = document.getElementById('emptyOrders');
-
-        if (!tbody) return;
+        const activeOrdersList = document.getElementById('activeOrdersList');
+        const completedOrdersList = document.getElementById('completedOrdersList');
+        const emptyActiveOrders = document.getElementById('emptyActiveOrders');
+        const emptyCompletedOrders = document.getElementById('emptyCompletedOrders');
 
         if (this.orders.length === 0) {
-            tbody.innerHTML = '';
-            if (emptyOrders) {
-                emptyOrders.style.display = 'block';
+            if (activeOrdersList) activeOrdersList.innerHTML = '';
+            if (emptyActiveOrders) emptyActiveOrders.style.display = 'block';
+        } else {
+            if (emptyActiveOrders) emptyActiveOrders.style.display = 'none';
+            if (activeOrdersList) {
+                activeOrdersList.innerHTML = '';
+                for (const order of this.orders) {
+                    if (this.completedOrders.some(co => co.id === order.id)) {
+                        continue;
+                    }
+                    const orderElement = await this.createOrderCard(order, false);
+                    activeOrdersList.appendChild(orderElement);
+                }
             }
-            return;
         }
 
-        if (emptyOrders) {
-            emptyOrders.style.display = 'none';
-        }
-
-        tbody.innerHTML = '';
-        for (let i = 0; i < this.orders.length; i++) {
-            const order = this.orders[i];
-            const orderElement = await this.createOrderRow(order, i);
-            tbody.appendChild(orderElement);
+        if (this.completedOrders.length === 0) {
+            if (completedOrdersList) completedOrdersList.innerHTML = '';
+            if (emptyCompletedOrders) emptyCompletedOrders.style.display = 'block';
+        } else {
+            if (emptyCompletedOrders) emptyCompletedOrders.style.display = 'none';
+            if (completedOrdersList) {
+                completedOrdersList.innerHTML = '';
+                for (const order of this.completedOrders) {
+                    const orderElement = await this.createOrderCard(order, true);
+                    completedOrdersList.appendChild(orderElement);
+                }
+            }
         }
     }
 
-    async createOrderRow(order, index) {
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-order-id', order.id);
+    async createOrderCard(order, isCompleted) {
+        const card = document.createElement('div');
+        card.className = `order-card ${isCompleted ? 'order-card--completed' : ''}`;
+        card.setAttribute('data-order-id', order.id);
 
         const goods = await this.loadGoodsForOrder(order.good_ids);
-        const goodsList = goods.slice(0, 2).map(good => good.name).join(', ');
-        const moreItems = goods.length > 2 ? `... и еще ${goods.length - 2}` : '';
-        const total = await this.calculateOrderTotal(order);
+        const total = await this.calculateOrderTotal(goods);
+        const canEdit = !isCompleted && this.canEditOrder(order);
+        const deliveryDate = this.formatDate(order.delivery_date);
+        const deliveryInterval = order.delivery_interval ? `(${order.delivery_interval})` : '';
 
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${this.formatDate(order.created_at)}</td>
-            <td title="${goods.map(g => g.name).join(', ')}">
-                ${goodsList} ${moreItems}
-            </td>
-            <td>${formatPrice(total)}</td>
-            <td>${order.delivery_date}<br>${order.delivery_interval}</td>
-            <td class="actions">
+        const goodsHtml = goods.map(good => {
+            let new_img = "http://localhost:8000/api" + good.image_url?.replace('https://edu.std-900.ist.mospolytech.ru/exam-2024-1/api', '') || '';
+
+            return `
+            <div class="order-good-item">
+                <div class="order-good-item__image">
+                    <img src="${good.image_url}" 
+                         alt="${good.name}" 
+                         onerror="this.src='https://via.placeholder.com/60x60?text=No+Image'">
+                </div>
+                <div class="order-good-item__info">
+                    <h4 class="order-good-item__name">${good.name}</h4>
+                    <div class="order-good-item__price">${formatPrice(good.discount_price || good.actual_price || 0)}</div>
+                </div>
+            </div>
+        `;
+        }).join('');
+
+        card.innerHTML = `
+        <div class="order-card__header">
+            <h3 class="order-card__title">Заказ #${order.id}</h3>
+            <span class="order-card__date">${this.formatDateTime(order.created_at)}</span>
+        </div>
+        <div class="order-card__body">
+            <div class="order-card__goods">
+                <h4>Товары (${goods.length}):</h4>
+                ${goodsHtml}
+            </div>
+            <div class="order-card__summary">
+                <div class="order-summary__item">
+                    <span class="order-summary__label">Товары:</span>
+                    <span class="order-summary__value">${formatPrice(total)}</span>
+                </div>
+                <div class="order-summary__item">
+                    <span class="order-summary__label">Доставка:</span>
+                    <span class="order-summary__value">
+                        ${deliveryDate} ${deliveryInterval}
+                    </span>
+                </div>
+                <div class="order-summary__item order-summary__total">
+                    <span class="order-summary__label">Итого:</span>
+                    <span class="order-summary__value">${formatPrice(total)}</span>
+                </div>
+            </div>
+        </div>
+        <div class="order-card__footer">
+            <div class="order-card__status">
+                ${isCompleted ?
+                '<span class="status-badge status-badge--completed">Завершён</span>' :
+                `<span>${deliveryDate} ${deliveryInterval}</span>`
+            }
+                ${order.delivery_address ? `<span>${order.delivery_address}</span>` : ''}
+            </div>
+            <div class="order-card__actions">
                 <button class="btn btn-sm btn-info view-order-btn" data-order-id="${order.id}">
                     Просмотр
                 </button>
-                <button class="btn btn-sm btn-warning edit-order-btn" data-order-id="${order.id}">
-                    Редактировать
+                ${!isCompleted ? `
+                    <button class="btn btn-sm btn-warning edit-order-btn" data-order-id="${order.id}" ${canEdit ? '' : 'disabled title="Редактирование недоступно (дата доставки прошла)"'}>
+                        Редактировать
+                    </button>
+                    <button class="btn btn-sm btn-success complete-order-btn" data-order-id="${order.id}">
+                        Завершить
+                    </button>
+                ` : ''}
+                <button class="btn btn-sm btn-outline-accent reorder-btn" data-order-id="${order.id}">
+                    Заказать снова
                 </button>
-                <button class="btn btn-sm btn-danger delete-order-btn" data-order-id="${order.id}">
-                    Удалить
-                </button>
-            </td>
-        `;
+                ${!isCompleted ? `
+                    <button class="btn btn-sm btn-danger delete-order-btn" data-order-id="${order.id}">
+                        Удалить
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `;
 
-        return tr;
+        return card;
     }
 
     async viewOrder(orderId) {
         try {
-            const order = await examAPI.getOrder(orderId);
+            let order;
+            let goods;
+
+            order = this.orders.find(o => o.id == orderId);
+            if (!order) {
+                order = this.completedOrders.find(o => o.id == orderId);
+            }
+
+            if (!order) {
+                order = await examAPI.getOrder(orderId);
+            }
+
             if (!order) {
                 notifications.error('Заказ не найден');
                 return;
             }
 
             this.currentOrderId = orderId;
-            if (typeof ModalCore !== 'undefined') {
-                ModalCore.open('order_info');
-            } else {
-                showModal('viewOrderModal');
-            }
+            this.showModal('orderDetailsModal');
 
-            document.getElementById('orderNumber').textContent = orderId;
-            document.getElementById('orderDate').textContent = this.formatDate(order.created_at);
-            document.getElementById('deliveryDate').textContent = order.delivery_date;
-            document.getElementById('deliveryInterval').textContent = order.delivery_interval;
-            document.getElementById('deliveryAddress').textContent = order.delivery_address;
-            document.getElementById('customerName').textContent = order.full_name;
-            document.getElementById('customerPhone').textContent = order.phone;
-            document.getElementById('customerEmail').textContent = order.email;
-            document.getElementById('orderNotes').textContent = order.comment || 'Нет комментария';
+            document.getElementById('modalOrderNumber').textContent = orderId;
 
-            const goods = await this.loadGoodsForOrder(order.good_ids);
-            const container = document.getElementById('orderItemsList');
-            const totalAmount = document.getElementById('orderTotalAmount');
+            const modalContent = document.getElementById('orderDetailsContent');
+            goods = await this.loadGoodsForOrder(order.good_ids);
+            const total = await this.calculateOrderTotal(goods);
 
-            if (container) {
-                container.innerHTML = goods.map(good => `
-                    <div class="order__item">
-                        <div class="item__info">
-                            <div class="item__name">${good.name}</div>
-                            <div class="item__meta">${formatPrice(good.discount_price || good.actual_price)}</div>
-                        </div>
-                        <div class="item__total">${formatPrice(good.discount_price || good.actual_price)}</div>
+            const goodsHtml = goods.map(good => {
+                let new_img = "http://localhost:8000/api" + good.image_url?.replace('https://edu.std-900.ist.mospolytech.ru/exam-2024-1/api', '') || '';
+                return `
+                <div class="order-good-item" style="margin-bottom: 15px; padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                    <div class="order-good-item__image">
+                        <img src="${good.image_url}" 
+                             alt="${good.name}"
+                             style="width: 80px; height: 80px;"
+                             onerror="this.src='https://via.placeholder.com/80x80?text=No+Image'">
                     </div>
-                `).join('');
-            }
+                    <div class="order-good-item__info">
+                        <h4 style="margin: 0 0 5px 0; font-size: 16px;">${good.name}</h4>
+                        <div style="color: var(--accent-neon); font-weight: 700; font-size: 18px;">${formatPrice(good.discount_price || good.actual_price || 0)}</div>
+                        ${good.rating ? `<div style="color: #ffaa00; margin-top: 5px;">${renderRating(good.rating)} ${good.rating.toFixed(1)}</div>` : ''}
+                    </div>
+                </div>
+            `;
+            }).join('');
 
-            if (totalAmount) {
-                const total = goods.reduce((sum, good) => sum + (good.discount_price || good.actual_price || 0), 0);
-                totalAmount.textContent = formatPrice(total);
+            modalContent.innerHTML = `
+            <div class="delivery-info">
+                <h4>Информация о доставке</h4>
+                <p>
+                    <span>Дата доставки:</span>
+                    <span>${this.formatDate(order.delivery_date)}</span>
+                </p>
+                <p>
+                    <span>Интервал:</span>
+                    <span>${order.delivery_interval || 'Не указан'}</span>
+                </p>
+                <p>
+                    <span>Адрес:</span>
+                    <span>${order.delivery_address || 'Не указан'}</span>
+                </p>
+                <p>
+                    <span>Дата создания:</span>
+                    <span>${this.formatDateTime(order.created_at)}</span>
+                </p>
+            </div>
+            
+            <div class="delivery-info">
+                <h4>Данные покупателя</h4>
+                <p>
+                    <span>Имя:</span>
+                    <span>${order.full_name || 'Не указано'}</span>
+                </p>
+                <p>
+                    <span>Телефон:</span>
+                    <span>${order.phone || 'Не указан'}</span>
+                </p>
+                <p>
+                    <span>Email:</span>
+                    <span>${order.email || 'Не указан'}</span>
+                </p>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h4 style="color: var(--accent-neon); margin-bottom: 15px; font-size: 18px;">Товары (${goods.length})</h4>
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
+                    ${goodsHtml}
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border-medium);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 style="margin: 0; font-size: 18px;">Общая стоимость:</h4>
+                    <h3 style="margin: 0; color: var(--accent-neon); font-size: 24px;">${formatPrice(total)}</h3>
+                </div>
+            </div>
+            
+            ${order.comment ? `
+                <div style="margin-top: 20px; padding: 15px; background: var(--bg-secondary); border-radius: var(--border-radius); border: 1px solid var(--border-medium);">
+                    <h4 style="margin-bottom: 10px; color: var(--accent-neon); font-size: 16px;">Комментарий к заказу</h4>
+                    <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">${order.comment}</p>
+                </div>
+            ` : ''}
+        `;
+
+            const goodsScrollContainer = modalContent.querySelector('div[style*="max-height: 300px"]');
+            if (goodsScrollContainer) {
+                goodsScrollContainer.style.scrollbarWidth = 'thin';
+                goodsScrollContainer.style.scrollbarColor = 'var(--accent-neon) var(--bg-secondary)';
             }
 
         } catch (error) {
@@ -327,50 +544,33 @@ class OrdersManager {
 
     async editOrder(orderId) {
         try {
-            const order = await examAPI.getOrder(orderId);
+            const order = this.orders.find(o => o.id == orderId);
             if (!order) {
                 notifications.error('Заказ не найден');
                 return;
             }
 
+            if (!this.canEditOrder(order)) {
+                notifications.error('Редактирование недоступно: дата доставки уже прошла');
+                return;
+            }
+
             this.currentOrderId = orderId;
-            if (typeof ModalCore !== 'undefined') {
-                ModalCore.open('edit_order');
-            }
+            this.showModal('editOrderModal');
 
-            document.getElementById('editOrderNumber').textContent = orderId;
-            document.getElementById('editFullName').value = order.full_name;
-            document.getElementById('editEmail').value = order.email;
-
-            const phone = order.phone;
-            let formattedPhone = phone;
-            if (phone && phone.length >= 11) {
-                const digits = phone.replace(/\D/g, '');
-                if (digits.length === 11) {
-                    formattedPhone = '+7 (' + digits.substring(1, 4) + ') ' +
-                        digits.substring(4, 7) + '-' +
-                        digits.substring(7, 9) + '-' +
-                        digits.substring(9, 11);
-                }
-            }
-            document.getElementById('editPhone').value = formattedPhone;
-
-            document.getElementById('editDeliveryAddress').value = order.delivery_address;
+            document.getElementById('editModalOrderNumber').textContent = orderId;
+            document.getElementById('editFullName').value = order.full_name || '';
+            document.getElementById('editPhone').value = order.phone || '';
+            document.getElementById('editDeliveryAddress').value = order.delivery_address || '';
 
             let dateValue = order.delivery_date;
-            if (dateValue.includes('.')) {
+            if (dateValue && dateValue.includes('.')) {
                 const [day, month, year] = dateValue.split('.');
-                dateValue = `${year}-${month}-${day}`;
+                dateValue = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
             }
-            document.getElementById('editDeliveryDate').value = dateValue;
-
-            document.getElementById('editDeliveryInterval').value = order.delivery_interval;
+            document.getElementById('editDeliveryDate').value = dateValue || '';
+            document.getElementById('editDeliveryInterval').value = order.delivery_interval || '14:00-18:00';
             document.getElementById('editComment').value = order.comment || '';
-
-            const editPhoneInput = document.getElementById('editPhone');
-            if (editPhoneInput) {
-                this.applyPhoneMask(editPhoneInput);
-            }
 
         } catch (error) {
             console.error('Ошибка редактирования заказа:', error);
@@ -387,7 +587,10 @@ class OrdersManager {
             await examAPI.deleteOrder(orderId);
             notifications.success('Заказ успешно удален!');
 
-            await this.loadOrders();
+            this.orders = this.orders.filter(o => o.id != orderId);
+            this.completedOrders = this.completedOrders.filter(o => o.id != orderId);
+            localStorage.setItem('completedOrders', JSON.stringify(this.completedOrders));
+
             this.renderOrders();
             this.updateStats();
 
@@ -397,10 +600,82 @@ class OrdersManager {
         }
     }
 
+    async completeOrder(orderId) {
+        try {
+            const order = this.orders.find(o => o.id == orderId);
+            if (!order) {
+                notifications.error('Заказ не найден');
+                return;
+            }
+
+            this.completedOrders.push(order);
+            this.orders = this.orders.filter(o => o.id != orderId);
+
+            localStorage.setItem('completedOrders', JSON.stringify(this.completedOrders));
+
+            notifications.success('Заказ отмечен как завершённый!');
+
+            this.renderOrders();
+            this.updateStats();
+
+        } catch (error) {
+            console.error('Ошибка завершения заказа:', error);
+            notifications.error('Не удалось завершить заказ');
+        }
+    }
+
+    async reorder(orderId) {
+        try {
+            let order = this.orders.find(o => o.id == orderId);
+            if (!order) {
+                order = this.completedOrders.find(o => o.id == orderId);
+            }
+
+            if (!order) {
+                order = await examAPI.getOrder(orderId);
+            }
+
+            if (!order || !order.good_ids || order.good_ids.length === 0) {
+                notifications.error('Не удалось найти товары в заказе');
+                return;
+            }
+
+            const goods = await this.loadGoodsForOrder(order.good_ids);
+
+            const cart = getCart();
+            let addedCount = 0;
+
+            for (const good of goods) {
+                const existingItem = cart.find(item => item.id === good.id);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({ id: good.id, quantity: 1 });
+                }
+                addedCount++;
+            }
+
+            saveCart(cart);
+            updateCartBadge();
+
+            notifications.success(`${addedCount} товаров добавлено в корзину!`);
+
+            setTimeout(() => {
+                window.location.href = './basket.html';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Ошибка повторного заказа:', error);
+            notifications.error('Не удалось добавить товары в корзину');
+        }
+    }
+
     async updateOrder() {
+        const form = document.getElementById('editOrderForm');
+        if (!form || !this.currentOrderId) return;
+
         const formData = {
             full_name: document.getElementById('editFullName').value,
-            email: document.getElementById('editEmail').value,
             phone: document.getElementById('editPhone').value,
             delivery_address: document.getElementById('editDeliveryAddress').value,
             delivery_date: this.formatDateForAPI(document.getElementById('editDeliveryDate').value),
@@ -408,82 +683,160 @@ class OrdersManager {
             comment: document.getElementById('editComment').value || ''
         };
 
-        let phone = formData.phone.replace(/\D/g, '');
-        if (phone.startsWith('7')) {
-            phone = '8' + phone.substring(1);
-        } else if (phone.length === 10) {
-            phone = '8' + phone;
+        if (!formData.full_name || !formData.phone || !formData.delivery_address ||
+            !formData.delivery_date || !formData.delivery_interval) {
+            notifications.error('Заполните все обязательные поля');
+            return;
         }
-        formData.phone = phone;
 
         try {
             await examAPI.updateOrder(this.currentOrderId, formData);
             notifications.success('Заказ успешно обновлен!');
 
-            if (typeof ModalCore !== 'undefined') {
-                ModalCore.close('edit_order');
+            this.closeModal('editOrderModal');
+
+            const orderIndex = this.orders.findIndex(o => o.id == this.currentOrderId);
+            if (orderIndex !== -1) {
+                this.orders[orderIndex] = {
+                    ...this.orders[orderIndex],
+                    ...formData
+                };
             }
 
-            await this.loadOrders();
             this.renderOrders();
-            this.updateStats();
 
         } catch (error) {
             console.error('Ошибка обновления заказа:', error);
-            notifications.error('Не удалось обновить заказ: ' + error.message);
+            notifications.error('Не удалось обновить заказ: ' + (error.message || 'Ошибка сервера'));
         }
     }
 
     formatDateForAPI(dateString) {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}.${month}.${year}`;
+        try {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        } catch {
+            return dateString;
+        }
+    }
+
+    showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
     }
 
     bindEvents() {
+        document.querySelectorAll('.tab__btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.target.dataset.tab;
+
+                document.querySelectorAll('.tab__btn').forEach(b => b.classList.remove('tab__btn--active'));
+                e.target.classList.add('tab__btn--active');
+
+                document.querySelectorAll('.tab__content').forEach(content => {
+                    content.classList.remove('tab__content--active');
+                });
+                document.getElementById(`${tabId}Orders`).classList.add('tab__content--active');
+            });
+        });
+
         document.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('view-order-btn')) {
-                const orderId = e.target.dataset.orderId;
+            const target = e.target;
+            const orderId = target.dataset.orderId ||
+                target.closest('[data-order-id]')?.dataset.orderId;
+
+            if (!orderId) return;
+
+            if (target.classList.contains('view-order-btn') ||
+                target.closest('.view-order-btn')) {
+                e.preventDefault();
                 await this.viewOrder(orderId);
             }
 
-            if (e.target.classList.contains('edit-order-btn')) {
-                const orderId = e.target.dataset.orderId;
+            if (target.classList.contains('edit-order-btn') ||
+                target.closest('.edit-order-btn')) {
+                e.preventDefault();
                 await this.editOrder(orderId);
             }
 
-            if (e.target.classList.contains('delete-order-btn')) {
-                const orderId = e.target.dataset.orderId;
+            if (target.classList.contains('delete-order-btn') ||
+                target.closest('.delete-order-btn')) {
+                e.preventDefault();
                 await this.deleteOrder(orderId);
             }
-        });
 
-        document.addEventListener('submit', async (e) => {
-            if (e.target && e.target.id === 'editOrderForm') {
+            if (target.classList.contains('complete-order-btn') ||
+                target.closest('.complete-order-btn')) {
                 e.preventDefault();
-                await this.updateOrder();
+                await this.completeOrder(orderId);
+            }
+
+            if (target.classList.contains('reorder-btn') ||
+                target.closest('.reorder-btn')) {
+                e.preventDefault();
+                await this.reorder(orderId);
             }
         });
-    }
 
-    applyPhoneMask(inputElement) {
-        inputElement.addEventListener('input', function (e) {
-            let value = e.target.value.replace(/\D/g, '');
+        const editForm = document.getElementById('editOrderForm');
+        if (editForm) {
+            editForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.updateOrder();
+            });
+        }
 
-            if (value.startsWith('7') || value.startsWith('8')) {
-                value = value.substring(1);
-            }
+        const editPhone = document.getElementById('editPhone');
+        if (editPhone) {
+            editPhone.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
 
-            if (value.length > 0) {
-                let formattedValue = '+7 ';
-                if (value.length > 0) formattedValue += '(' + value.substring(0, 3);
-                if (value.length >= 3) formattedValue += ') ' + value.substring(3, 6);
-                if (value.length >= 6) formattedValue += '-' + value.substring(6, 8);
-                if (value.length >= 8) formattedValue += '-' + value.substring(8, 10);
+                if (value.startsWith('7') || value.startsWith('8')) {
+                    value = value.substring(1);
+                }
 
-                e.target.value = formattedValue;
+                if (value.length > 0) {
+                    let formattedValue = '+7 ';
+                    if (value.length > 0) formattedValue += '(' + value.substring(0, 3);
+                    if (value.length >= 3) formattedValue += ') ' + value.substring(3, 6);
+                    if (value.length >= 6) formattedValue += '-' + value.substring(6, 8);
+                    if (value.length >= 8) formattedValue += '-' + value.substring(8, 10);
+
+                    e.target.value = formattedValue;
+                }
+            });
+        }
+
+        document.querySelectorAll('.modal__overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                const modalId = e.target.closest('.modal')?.id;
+                if (modalId) {
+                    this.closeModal(modalId);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    if (modal.style.display === 'flex') {
+                        this.closeModal(modal.id);
+                    }
+                });
             }
         });
     }
